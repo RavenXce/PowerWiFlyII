@@ -45,7 +45,10 @@ void loop()
 		{			
 			// Register arduino prototype on server
 			wifly.SendUDP("<Prototype:pw9999:0:0000>");
-			delay(2000);
+			delay(500);
+			if(wifly.uart.available()){
+				Serial.println("stuff");
+			}
 			sync = true;
 		}
 		int new_switch_status = wifly.ProcessCommand();

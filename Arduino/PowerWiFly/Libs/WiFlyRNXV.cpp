@@ -1,9 +1,9 @@
 /*
- * WiFlyRNXV.cpp
- *
- * Created: 2/19/2013 11:39:21 PM
- *  Author: Raaj
- */ 
+* WiFlyRNXV.cpp
+*
+* Created: 2/19/2013 11:39:21 PM
+*  Author: Raaj
+*/
 
 #include "WiFlyRNXV.h"
 
@@ -58,7 +58,7 @@ char* WiFlyRNXV::getBufferResponse(){
 			Serial.println("buffer overflow");
 			bufpos=0;
 		}
-	}	
+	}
 	
 	//Serial.println(responseBuffer);
 	Serial.println("");
@@ -66,7 +66,7 @@ char* WiFlyRNXV::getBufferResponse(){
 	return responseBuffer;
 }
 
-//Check buffer with a particular 
+//Check buffer with a particular
 boolean WiFlyRNXV::checkBufferResponse(char* compareValue,int timeout){
 	
 	//Variables
@@ -113,7 +113,7 @@ boolean WiFlyRNXV::checkBufferResponse(char* compareValue,int timeout){
 	Serial.println("");
 	uart.flush();
 	return compareSuccess;
-}	
+}
 
 //Enter Command Mode
 boolean WiFlyRNXV::EnterCommandMode(){
@@ -121,10 +121,10 @@ boolean WiFlyRNXV::EnterCommandMode(){
 	uart.print(COMMAND_MODE);
 	delay(COMMAND_MODE_GUARD_TIME);
 	if(checkBufferResponse("CMD",TIMEOUT_TIME))
-		inCommandMode=true;
+	inCommandMode=true;
 	else
-		inCommandMode=false;	
-		
+	inCommandMode=false;
+	
 	return inCommandMode;
 }
 
@@ -154,11 +154,11 @@ boolean WiFlyRNXV::CheckWiFiStatus(){
 	}
 	
 	if(checkBufferResponse("OK",TIMEOUT_TIME))
-		wifiStatus=true;
+	wifiStatus=true;
 	else
-		wifiStatus=false;
+	wifiStatus=false;
 	
-		
+	
 	return wifiStatus;
 
 }
@@ -191,7 +191,7 @@ void WiFlyRNXV::EnterAdHoc(){
 	Serial.println("set ip netmask 255.255.0.0"); uart.flush();
 	uart.println("set ip netmask 255.255.0.0"); delay(delayW);
 	Serial.println("set ip dhcp 0"); uart.flush();
-	uart.println("set ip dhcp 0"); delay(delayW);	
+	uart.println("set ip dhcp 0"); delay(delayW);
 	Serial.println("set ip proto 2"); uart.flush();
 	uart.println("set ip proto 2"); delay(delayW);
 	Serial.println("set wlan ssid WiFly-GSX-XX"); uart.flush();
@@ -217,9 +217,9 @@ void WiFlyRNXV::EnterAdHoc(){
 boolean WiFlyRNXV::NetworkConnected(){
 	boolean check=false;
 	if(uart.available()){
-		Serial.println("Checking if connected");		
+		Serial.println("Checking if connected");
 		check=checkBufferResponse("OK",TIMEOUT_TIME);
-	}		
+	}
 	if(check){
 		Serial.println("Connected!!!");
 		return true;
@@ -230,12 +230,12 @@ boolean WiFlyRNXV::NetworkConnected(){
 
 boolean WiFlyRNXV::AdHocEnded(){
 	boolean check=false;
-	if(uart.available()){	
-		 check=true;
-		 Serial.println("datarec");
-		 delay(4000);
-		 uart.flush();
-	}		 
+	if(uart.available()){
+		check=true;
+		Serial.println("datarec");
+		delay(4000);
+		uart.flush();
+	}
 	if(check){
 		Serial.println("READY!");
 		return true;
@@ -281,90 +281,69 @@ void WiFlyRNXV::SendUDP(char* value){
 }
 
 int WiFlyRNXV::ProcessCommand()
-{	
-	if(!uart.available()) return -1;
-	
-	Serial.println("Processing command..");
-	
-	char* buffer;
-	
-	buffer = getBufferResponse();
-	
-	// Update switches if just rebooted
-	if(checkForString(KEYWORD_SYNC,buffer))
-	{		
-		SendUDP("<Prototype:pw9999:2:0000>");
-		return -1;
-	}
-	// Check if is switch toggle command.	
-	else
-	{
-		int i;
-		int switch_status = 0;
-		bool found_command = false;
-		// Check for delimiting symbols.	
-		for(i=0; i++; i<RESPONSE_BUFFER_SIZE-(MAX_SWITCHES+2)-1)
+{
+	if(uart.available()){
+		
+		Serial.println("Processing command..");
+		
+		char* buffer;
+		
+		buffer = getBufferResponse();
+		
+		// Update switches if just rebooted
+		if(checkForString(KEYWORD_SYNC,buffer))
 		{
-			if(*(buffer+i) == KEYWORD_FRONT_DELIMITER &&
+			SendUDP("<Prototype:pw9999:2:0000>");
+			return -1;
+		}
+		// Check if is switch toggle command.
+		else
+		{
+			int i;
+			int switch_status = 0;
+			bool found_command = false;
+			// Check for delimiting symbols.
+			for(i=0; i++; i<RESPONSE_BUFFER_SIZE-(MAX_SWITCHES+2)-1)
+			{
+				if(*(buffer+i) == KEYWORD_FRONT_DELIMITER &&
 				*(buffer+i+MAX_SWITCHES+2) == KEYWORD_END_DELIMITER)
 				{
 					found_command = true;
-					break;				
+					Serial.println("Found data!");
+					break;
 				}
-		}		
-		if(found_command == true)
-		{
-			int j;
-			for(j=0; j++; j<MAX_SWITCHES)
+			}
+			if(found_command == true)
 			{
-				// Arrange flags
-				if (*(buffer+i+j+1) == '1')
-				switch_status += 1;
-				// If zero do nothing
-				// If not zero then don't adjust switch. nyi.
-				// else if (*(buffer+i+j+1) == '1')
-				
-				switch_status << 10;
+				int j;
+				for(j=0; j++; j<MAX_SWITCHES)
+				{
+					// Arrange flags
+					if (*(buffer+i+j+1) == '1')
+					switch_status += 1;
+					// If zero do nothing
+					// If not zero then don't adjust switch. nyi.
+					// else if (*(buffer+i+j+1) == '1')
+					switch_status << 1;
+					return switch_status;
+				}
+			}
+			else
+			{
+				Serial.println("Could not find valid data.");
+				return -1;
 			}
 		}
-		else return -1;
+		
+		// other possible cmds:
+		// send state
+		// toggle power switches => check for consistancy with sender.
+		// set a timer
+		// sync (encryption):
+		// check for sync (pushbutton). => generate encrypted pw seed and send.
+		// phone app will decrypt and use seed to hash(encrypt) all cmds.
 	}
-	
-	/*
-	// State request and atomic individual toggle with error checking. nyi.
-	if (checkBufferResponse(KEYWORD_REQUEST_STATE,1000))
-	{		
-		// send power relay state
-	}
-    else if (checkBufferResponse(KEYWORD_TOGGLE_SWITCHES,1000))
-	{
-		// get switch number
-		// toggle and save state => make atomic!!
-		switch(buffer[0])
-		{
-			case 'A':
-			// switch A to buffer[1].
-			break;
-			case 'B':
-			break;
-			case 'C':
-			break;
-			case 'D':
-			break;
-			default:
-			// invalid cmd, clear buffer
-			break;
-		}
-	}
-	*/
-	
-	// possible cmds:
-	// send state
-	// toggle power switches => check for consistancy with sender.
-	// set a timer
-	// sync (encryption):
-	// check for sync (pushbutton). => generate encrypted pw seed and send.
-	// phone app will decrypt and use seed to hash(encrypt) all cmds.
+	else return -1;
 }
 
 void WiFlyRNXV::ForceConnect()
@@ -375,7 +354,7 @@ void WiFlyRNXV::ForceConnect()
 	uart.println("set wlan join 1");
 	uart.println("set wlan channel 0");
 	uart.println("set ip dhcp 1");
-	uart.println("reboot");	
+	uart.println("reboot");
 	
 	return;
 }
