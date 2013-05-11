@@ -42,7 +42,8 @@ void loop()
 	if(mode == UDP) 
 	{
 		if(sync == false)
-		{
+		{			
+			// Register arduino prototype on server
 			wifly.SendUDP("<Prototype:pw9999:0:0000>");
 			delay(2000);
 			sync = true;
@@ -74,10 +75,7 @@ void loop()
 		// Check if app has set wifly to networked mode
 		if(wifly.NetworkConnected()){
 			mode = NETWORKED;
-			delay(2000);
 			wifly.SetUDPMode();
-			// Register arduino prototype on server
-			delay(2000);
 			mode = UDP;
 		}
 	}	

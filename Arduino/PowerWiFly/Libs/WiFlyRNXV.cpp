@@ -245,8 +245,9 @@ boolean WiFlyRNXV::AdHocEnded(){
 }
 
 void WiFlyRNXV::SetUDPMode(){
-	int delayW=2000;
+	int delayW=500;
 	
+	delay(2000);
 	if(!inCommandMode)	EnterCommandMode();
 	Serial.println("Attempting cmd mode");
 	
@@ -268,7 +269,8 @@ void WiFlyRNXV::SetUDPMode(){
 	
 	inCommandMode=false;
 	Serial.println("Done SetUDPMode");
-	uart.flush();	
+	uart.flush();
+	delay(2000);
 }
 
 void WiFlyRNXV::SendUDP(char* value){
