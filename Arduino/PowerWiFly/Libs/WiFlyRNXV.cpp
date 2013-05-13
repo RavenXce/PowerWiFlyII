@@ -2,7 +2,7 @@
 * WiFlyRNXV.cpp
 *
 * Created: 2/19/2013 11:39:21 PM
-*  Author: Raaj
+*  Author: Raaj, Ivan
 */
 
 #include "WiFlyRNXV.h"
@@ -21,16 +21,6 @@ void WiFlyRNXV::start(){
 
 void WiFlyRNXV::end(){
 	uart.end();
-}
-
-//Check if two strings/char* are the same
-boolean checkForString(char* responseBuffer,char* compare){
-	char * pch=NULL;
-	pch = strstr (responseBuffer,compare);
-	if(pch==NULL)
-	return false;
-	else
-	return true;
 }
 
 //Simply empty the buffer into the a char* and return (64 size)
@@ -115,15 +105,25 @@ boolean WiFlyRNXV::checkBufferResponse(char* compareValue,int timeout){
 	return compareSuccess;
 }
 
+//Check if two strings/char* are the same
+boolean WiFlyRNXV::checkForString(char* responseBuffer,char* compare){
+	char* pch = NULL;
+	pch = strstr (responseBuffer,compare);
+	if(pch == NULL)
+		return false;
+	else
+		return true;
+}
+
 //Enter Command Mode
 boolean WiFlyRNXV::EnterCommandMode(){
 	uart.flush();
 	uart.print(COMMAND_MODE);
 	delay(COMMAND_MODE_GUARD_TIME);
 	if(checkBufferResponse("CMD",TIMEOUT_TIME))
-	inCommandMode=true;
+		inCommandMode=true;
 	else
-	inCommandMode=false;
+		inCommandMode=false;
 	
 	return inCommandMode;
 }
@@ -284,68 +284,98 @@ int WiFlyRNXV::ProcessCommand()
 {
 	if(uart.available()){
 		
-		Serial.println("Processing command..");
+		Serial.println("UDP command received..");
 		
 		char* buffer;
+		char chResponse;		
+		int  bufpos = 0;
 		
-		buffer = getBufferResponse();
+		// Poll uart buffer
+		chResponse = uart.read();
+		Serial.print(chResponse);
 		
-		// Update switches if just rebooted
-		if(checkForString(KEYWORD_SYNC,buffer))
+		// Check for matching responses
+		if (chResponse == KEYWORD_FRONT_DELIMITER)
 		{
-			SendUDP("<Prototype:pw9999:2:0000>");
-			return -1;
-		}
-		// Check if is switch toggle command.
-		else
-		{
-			int i;
-			int switch_status = 0;
-			bool found_command = false;
-			// Check for delimiting symbols.
-			for(i=0; i++; i<RESPONSE_BUFFER_SIZE-(MAX_SWITCHES+2)-1)
+			// Reset the memory buffer
+			buffer = (char*) malloc(RESPONSE_BUFFER_SIZE);
+			memset (buffer, '\0', RESPONSE_BUFFER_SIZE-1);
+			buffer[0] = chResponse;
+			buffer++;
+			
+			
+			// Fill memory buffer
+			bool timeout = false;
+			unsigned long startTime = millis();
+			while(chResponse != KEYWORD_END_DELIMITER && !timeout)
 			{
-				if(*(buffer+i) == KEYWORD_FRONT_DELIMITER &&
-				*(buffer+i+MAX_SWITCHES+2) == KEYWORD_END_DELIMITER)
+				chResponse = uart.read();
+				Serial.print(chResponse);
+				if(bufpos < RESPONSE_BUFFER_SIZE-1)
 				{
-					found_command = true;
-					Serial.println("Found data!");
-					break;
+					buffer[bufpos] = chResponse;
+					bufpos++;
 				}
-			}
-			if(found_command == true)
-			{
-				int j;
-				for(j=0; j++; j<MAX_SWITCHES)
+				else
 				{
-					// Arrange flags
-					if (*(buffer+i+j+1) == '1')
-					switch_status += 1;
-					// If zero do nothing
-					// If not zero then don't adjust switch. nyi.
-					// else if (*(buffer+i+j+1) == '1')
-					switch_status << 1;
-					return switch_status;
+					Serial.println("buffer overflow");
+					bufpos=0;
 				}
+				if ((millis()-startTime) > TIMEOUT_TIME)
+					timeout = true;
 			}
-			else
+			// Check if sync command issued
+			if(checkForString(KEYWORD_SYNC,buffer))
 			{
-				Serial.println("Could not find valid data.");
+				Serial.println("");
+				uart.flush();
+				SendUDP("<Prototype:pw9999:2:0000>");
 				return -1;
 			}
+			// Check if switches should be toggled
+			else
+			{
+				int i;
+				int switch_status = 0;
+				bool found_command = false;
+				// Check for delimiting symbols.
+				for(i=0; i++; i<RESPONSE_BUFFER_SIZE-(MAX_SWITCHES+2)-1)
+				{
+					if(*(buffer+i) == KEYWORD_FRONT_DELIMITER &&
+					*(buffer+i+MAX_SWITCHES+2) == KEYWORD_END_DELIMITER)
+					{
+						found_command = true;
+						Serial.println("Found data!");
+						break;
+					}
+				}
+				if(found_command == true)
+				{
+					int j;
+					for(j=0; j++; j<MAX_SWITCHES)
+					{
+						// Arrange flags
+						if (*(buffer+i+j+1) == '1')
+						switch_status += 1;
+						// If zero do nothing
+						// If not zero then don't adjust switch. nyi.
+						// else if (*(buffer+i+j+1) == '1')
+						switch_status << 1;
+						return switch_status;
+					}
+				}
+				else
+				{
+					Serial.println("Could not find valid data.");
+					return -1;
+				}
+			}				
 		}
-		
-		// other possible cmds:
-		// send state
-		// toggle power switches => check for consistancy with sender.
-		// set a timer
-		// sync (encryption):
-		// check for sync (pushbutton). => generate encrypted pw seed and send.
-		// phone app will decrypt and use seed to hash(encrypt) all cmds.
 	}
 	else return -1;
 }
 
+// Procedure to enter a WIFI network for debug purposes
 void WiFlyRNXV::ForceConnect()
 {
 	EnterCommandMode();

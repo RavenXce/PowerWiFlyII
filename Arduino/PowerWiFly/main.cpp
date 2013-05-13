@@ -16,8 +16,8 @@ AuthTable authTable;
 void setup(){
 	DDRD = 0b11111000;
 	state[0] = state[1] = state[2] = state[3] = sync = false;
-	//mode = ADHOC;
-	mode = UDP;
+	mode = ADHOC;
+	// mode = UDP; // FOR DEBUG ONLY
 	
 	sei();
 	
@@ -31,10 +31,10 @@ void setup(){
 	Serial.println("run");
 	
 	wifly.ExitCommandMode(); // in case already in cmd mode
-	//wifly.RebootWiFly();	 // re-enter cmd and reboot
-	//wifly.FactoryRESET();
-	//Serial.println("Setting up adhoc mode..");	
-	//wifly.EnterAdHoc();
+	wifly.RebootWiFly();	 // re-enter cmd and reboot
+	wifly.FactoryRESET();
+	Serial.println("Setting up adhoc mode..");	
+	wifly.EnterAdHoc();
 }
 
 void loop()

@@ -49,10 +49,10 @@ const char* const REMOTE_PORT="2005";
 const char* const LOCAL_PORT="2000";
 
 //Communication Keywords
-#define KEYWORD_SYNC "$SYNC$"
-#define KEYWORD_REQUEST_STATE "$STATE$"
-#define KEYWORD_TOGGLE_MODES "$MODE$"
-#define KEYWORD_TOGGLE_SWITCHES "$SWITCH$"
+#define KEYWORD_SYNC "SYNC"
+#define KEYWORD_REQUEST_STATE "STATE"
+#define KEYWORD_TOGGLE_MODES "MODE"
+#define KEYWORD_TOGGLE_SWITCHES "SWITCH"
 #define KEYWORD_FRONT_DELIMITER '<'
 #define KEYWORD_END_DELIMITER '>'
 
@@ -75,7 +75,7 @@ class WiFlyRNXV{
 	void FactoryRESET();
 	void SetUDPMode();
 	void SendUDP(char* value);
-	void ForceConnect(); // debug mode
+	void ForceConnect(); // for debug mode
 	int ProcessCommand();
 	boolean NetworkConnected();
 	boolean AdHocEnded();
@@ -89,6 +89,7 @@ class WiFlyRNXV{
 	boolean wifiStatus;
 	char* getBufferResponse();
 	boolean checkBufferResponse(char* compareValue,int timeout);
+	boolean checkForString(char* compare1, char* compare2);
 };
 
 
