@@ -301,8 +301,7 @@ int WiFlyRNXV::ProcessCommand()
 			buffer = (char*) malloc(RESPONSE_BUFFER_SIZE);
 			memset (buffer, '\0', RESPONSE_BUFFER_SIZE-1);
 			buffer[0] = chResponse;
-			buffer++;
-			
+			buffer++;			
 			
 			// Fill memory buffer
 			bool timeout = false;
@@ -324,11 +323,14 @@ int WiFlyRNXV::ProcessCommand()
 				if ((millis()-startTime) > TIMEOUT_TIME)
 					timeout = true;
 			}
+			
+			// Flush uart buffer
+			Serial.println("");
+			uart.flush();
+			
 			// Check if sync command issued
 			if(checkForString(KEYWORD_SYNC,buffer))
 			{
-				Serial.println("");
-				uart.flush();
 				SendUDP("<Prototype:pw9999:2:0000>");
 				return -1;
 			}
