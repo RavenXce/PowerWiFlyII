@@ -384,8 +384,8 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 				// If not zero then don't adjust switch. nyi.
 				// else if (*(buffer+i+j+1) == '1')
 				switch_status << 1;
-				return switch_status;
 			}
+			return switch_status;
 		}
 		else
 		{
