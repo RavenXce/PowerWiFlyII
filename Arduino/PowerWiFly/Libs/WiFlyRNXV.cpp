@@ -304,8 +304,8 @@ int WiFlyRNXV::CheckUART()
 				// Reset the memory buffer
 				buffer = (char*) malloc(RESPONSE_BUFFER_SIZE);
 				memset (buffer, '\0', RESPONSE_BUFFER_SIZE-1);
-				buffer[0] = chResponse;
-				buffer++;
+				buffer[bufpos] = chResponse;
+				bufpos++;
 				
 				// Fill memory buffer
 				bool timeout = false;
@@ -361,13 +361,13 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 		int switch_status = 0;
 		bool found_command = false;
 		// Check for delimiting symbols.
-		if(*(buffer) == KEYWORD_FRONT_DELIMITER &&
-			*(buffer+MAX_SWITCHES+1) == KEYWORD_END_DELIMITER)
+		if(buffer[0] == KEYWORD_FRONT_DELIMITER &&
+		   buffer[MAX_SWITCHES+1] == KEYWORD_END_DELIMITER)
 		{
 			found_command = true;
 			for(i=0; i<MAX_SWITCHES; i++)
 			{
-				if(*(buffer+i+1) != '1' && *(buffer+i+1) != 0)
+				if(buffer[i+1] != '1' && buffer[i+1] != 0)
 					found_command = false;
 			}
 		}
@@ -379,7 +379,7 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 			{
 				// Arrange flags
 				if (*(buffer+i+j+1) == '1')
-				switch_status += 1;
+					switch_status += 1;
 				// If zero do nothing
 				// If not zero then don't adjust switch. nyi.
 				// else if (*(buffer+i+j+1) == '1')
