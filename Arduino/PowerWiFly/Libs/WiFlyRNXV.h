@@ -76,7 +76,8 @@ class WiFlyRNXV{
 	void SetUDPMode();
 	void SendUDP(char* value);
 	void ForceConnect(); // for debug mode
-	int ProcessCommand();
+	int CheckUART();
+	int ProcessResponse(char* buffer);
 	boolean NetworkConnected();
 	boolean AdHocEnded();
 	boolean EnterCommandMode();

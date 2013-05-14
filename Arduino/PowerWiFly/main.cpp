@@ -46,12 +46,9 @@ void loop()
 			// Register arduino prototype on server
 			wifly.SendUDP("<Prototype:pw9999:0:0000>");
 			delay(500);
-			if(wifly.uart.available()){
-				Serial.println("stuff");
-			}
 			sync = true;
 		}
-		int new_switch_status = wifly.ProcessCommand();
+		int new_switch_status = wifly.CheckUART();	// Poll UART
 		if (new_switch_status > 0)
 		{
 			new_switch_status << 4;
@@ -64,17 +61,8 @@ void loop()
 	}
 		
 	if (mode == ADHOC)
-	{
-//		Deprecated: server does device tracking now.
-// 		if (sync == false)
-// 		DecryptBuffer(buffer);
-// 		else if (CompareCommand(buffer,KEYWORD_SYNC))
-// 		{
-// 			authTable.AddDevice(buffer);
-// 		}
-		
+	{	
 		//wifly.ForceConnect(); // debug force connect
-
 		// Check if app has set wifly to networked mode
 		if(wifly.NetworkConnected()){
 			mode = NETWORKED;
