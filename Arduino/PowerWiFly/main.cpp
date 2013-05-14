@@ -16,8 +16,6 @@ AuthTable authTable;
 void setup(){
 	DDRD = 0b11111000;
 	state[0] = state[1] = state[2] = state[3] = sync = false;
-	mode = ADHOC;
-	// mode = UDP; // FOR DEBUG ONLY
 	
 	sei();
 	
@@ -35,6 +33,8 @@ void setup(){
 	wifly.FactoryRESET();
 	Serial.println("Setting up adhoc mode..");	
 	wifly.EnterAdHoc();
+	mode = ADHOC;
+	// mode = UDP; // FOR DEBUG ONLY
 }
 
 void loop()
@@ -51,8 +51,9 @@ void loop()
 		int new_switch_status = wifly.CheckUART();	// Poll UART
 		if (new_switch_status > 0)
 		{
+			Serial.print("Updating switch status now. New switch status code is: ");
 			new_switch_status << 4;
-			Serial.print(new_switch_status);
+			Serial.println(new_switch_status);
 			PORTD |= new_switch_status & POWER_MASK;
 			// compiler sucks? have to do this step separately.
 			int inverse_mask = ~POWER_MASK;

@@ -327,6 +327,7 @@ int WiFlyRNXV::CheckUART()
 					if ((millis()-startTime) > TIMEOUT_TIME)
 					timeout = true;
 				}
+				buffer[bufpos] = '\0'; // end of buffer
 				
 				// Flush uart buffer
 				Serial.println("");
@@ -343,9 +344,13 @@ int WiFlyRNXV::CheckUART()
 
 int WiFlyRNXV::ProcessResponse(char* buffer)
 {
+	Serial.println("Processing following response:");
+	Serial.println(buffer);
+	
 	// Check if sync command issued
 	if(checkForString(KEYWORD_SYNC,buffer))
 	{
+		Serial.println("Sending UDP sync request.");
 		SendUDP("<Prototype:pw9999:2:0000>");
 		return -1;
 	}
@@ -356,18 +361,19 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 		int switch_status = 0;
 		bool found_command = false;
 		// Check for delimiting symbols.
-		for(i=0; i++; i<RESPONSE_BUFFER_SIZE-(MAX_SWITCHES+2)-1)
+		if(*(buffer) == KEYWORD_FRONT_DELIMITER &&
+			*(buffer+MAX_SWITCHES+1) == KEYWORD_END_DELIMITER)
 		{
-			if(*(buffer+i) == KEYWORD_FRONT_DELIMITER &&
-			*(buffer+i+MAX_SWITCHES+2) == KEYWORD_END_DELIMITER)
+			found_command = true;
+			for(i=0; i<MAX_SWITCHES; i++)
 			{
-				found_command = true;
-				Serial.println("Found data!");
-				break;
+				if(*(buffer+i+1) != '1' && *(buffer+i+1) != 0)
+					found_command = false;
 			}
 		}
 		if(found_command == true)
 		{
+			Serial.println("Found switch data!");
 			int j;
 			for(j=0; j++; j<MAX_SWITCHES)
 			{
