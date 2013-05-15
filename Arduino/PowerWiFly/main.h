@@ -19,6 +19,7 @@
 #define WIFLY_RX_PIN 2
 #define WIFLY_TX_PIN 3
 #define MAX_SWITCHES 4
+#define START_PIN 10
 #define POWER_MASK	0b11110000; // Mask to prevent other pins from being affected
 #define POWER_A_PIN 0b00010000; // 4
 #define POWER_B_PIN 0b00100000; // 5

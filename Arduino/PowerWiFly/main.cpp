@@ -7,15 +7,16 @@
 
 #include "main.h"
 
+bool debugMode = true;
 bool sync;
-bool state[4];
 MODE mode;
 WiFlyRNXV wifly(WIFLY_RX_PIN, WIFLY_TX_PIN);
 AuthTable authTable;
 
 void setup(){
 	DDRD = 0b11111000;
-	state[0] = state[1] = state[2] = state[3] = sync = false;
+	
+	sync = false;
 	
 	sei();
 	
@@ -23,18 +24,19 @@ void setup(){
 	Serial.println("Beginning..");
 	
 	Serial.println("Setting up WiFi driver..");	
-	wifly.start();
-	
+	wifly.Begin();
+	wifly.ExitCommandMode();  // in case already in cmd mode	
+	wifly.RebootWiFly();	  // re-enter cmd and reboot
 	delay(2000);
-	Serial.println("run");
 	
-	wifly.ExitCommandMode(); // in case already in cmd mode
-	wifly.RebootWiFly();	 // re-enter cmd and reboot
-	wifly.FactoryRESET();
-	Serial.println("Setting up adhoc mode..");	
-	wifly.EnterAdHoc();
-	mode = ADHOC;
-	// mode = UDP; // FOR DEBUG ONLY
+	if(!debugMode)
+	{
+		wifly.FactoryRESET();
+		Serial.println("Setting up adhoc mode..");	
+		wifly.EnterAdHoc();
+		mode = ADHOC;
+	}		
+	if(debugMode) mode = UDP; // FOR DEBUG ONLY
 }
 
 void loop()
@@ -49,15 +51,16 @@ void loop()
 			sync = true;
 		}
 		int new_switch_status = wifly.CheckUART();	// Poll UART
-		if (new_switch_status > 0)
+		if (new_switch_status >= 0)
 		{
 			Serial.print("Updating switch status now. New switch status code is: ");
-			new_switch_status << 4;
+			new_switch_status = new_switch_status << MAX_SWITCHES-1; // one additional shift has already been done
 			Serial.println(new_switch_status);
-			PORTD |= new_switch_status & POWER_MASK;
-			// compiler sucks? have to do this step separately.
-			int inverse_mask = ~POWER_MASK;
-			PORTD &= ~(new_switch_status | inverse_mask);
+			
+			int pins = new_switch_status & POWER_MASK;
+			PORTD |= pins;
+			pins = new_switch_status | ~POWER_MASK;
+			PORTD &= pins;
 		}		
 	}
 		

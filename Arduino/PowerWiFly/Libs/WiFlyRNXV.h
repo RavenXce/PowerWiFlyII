@@ -38,9 +38,8 @@
 
 //CMD Wait Times based on manual
 #define COMMAND_MODE_GUARD_TIME 	300
-#define DEFAULT_WAIT_TIME			1000UL
-#define ATTN_WAIT_TIME				1000UL
-#define JOIN_WAIT_TIME 				10000UL
+#define DEFAULT_WAIT_TIME			2000
+#define DEFAULT_DELAY_TIME			500
 #define TIMEOUT_TIME				3000
 
 //Local Remote Server Address Port
@@ -68,8 +67,8 @@ class WiFlyRNXV{
 	WiFlyRNXV(byte pinReceive, byte pinSend);					//Constructor with Pins for UART
 	SoftwareSerial uart;										//SoftwareSerial driver
 	
-	void start();
-	void end();
+	void Begin();
+	void End();
 	void RebootWiFly();
 	void EnterAdHoc();
 	void FactoryRESET();

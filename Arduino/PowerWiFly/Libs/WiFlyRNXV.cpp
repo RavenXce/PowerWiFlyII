@@ -13,13 +13,14 @@ WiFlyRNXV::WiFlyRNXV(byte pinReceive, byte pinSend) : uart (pinReceive, pinSend)
 	wifiStatus=false;
 }
 
-void WiFlyRNXV::start(){
+void WiFlyRNXV::Begin(){
 	uart.begin(WIFLY_DEFAULT_BAUD_RATE);
 	uart.listen();
 	uart.flush();
+	delay(500);
 }
 
-void WiFlyRNXV::end(){
+void WiFlyRNXV::End(){
 	uart.end();
 }
 
@@ -110,9 +111,9 @@ boolean WiFlyRNXV::checkForString(char* responseBuffer,char* compare){
 	char* pch = NULL;
 	pch = strstr (responseBuffer,compare);
 	if(pch == NULL)
-	return false;
+		return false;
 	else
-	return true;
+		return true;
 }
 
 //Enter Command Mode
@@ -121,15 +122,16 @@ boolean WiFlyRNXV::EnterCommandMode(){
 	uart.print(COMMAND_MODE);
 	delay(COMMAND_MODE_GUARD_TIME);
 	if(checkBufferResponse("CMD",TIMEOUT_TIME))
-	inCommandMode=true;
+		inCommandMode=true;
 	else
-	inCommandMode=false;
+		inCommandMode=false;
 	
 	return inCommandMode;
 }
 
 //Exit Command Mode
 boolean WiFlyRNXV::ExitCommandMode(){
+	Serial.println("Exiting cmd mode..");
 	uart.println("exit");
 	delay(COMMAND_MODE_GUARD_TIME);
 	inCommandMode=false;
@@ -166,47 +168,42 @@ boolean WiFlyRNXV::CheckWiFiStatus(){
 void WiFlyRNXV::FactoryRESET(){
 	if(!inCommandMode)	EnterCommandMode();
 	int delayW=500;
-	delay(delayW);
+	delay(DEFAULT_DELAY_TIME);
 	
 	Serial.println("factory RESET"); uart.flush();
-	uart.println("factory RESET"); delay(delayW); getBufferResponse();
+	uart.println("factory RESET"); delay(DEFAULT_DELAY_TIME); getBufferResponse();
 	Serial.println("reboot"); uart.flush();
-	uart.println("reboot"); delay(delayW); getBufferResponse();
-	delay(2000);
+	uart.println("reboot"); delay(DEFAULT_DELAY_TIME); getBufferResponse();
+	delay(DEFAULT_WAIT_TIME);
 	Serial.println("Factory RESET done");
 	inCommandMode=false;
 }
 
 void WiFlyRNXV::EnterAdHoc(){
-	
-	int delayW=500;
-	
-	if(!inCommandMode)	EnterCommandMode();
-	Serial.println("Attempting cmd mode");
-	
-	delay(1000);
+	if(!inCommandMode)	EnterCommandMode();	
+	delay(DEFAULT_WAIT_TIME);
 	// Setup adhoc network
 	Serial.println("set ip address 169.254.1.1"); uart.flush();
-	uart.println("set ip address 169.254.1.1"); delay(delayW);
+	uart.println("set ip address 169.254.1.1"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip netmask 255.255.0.0"); uart.flush();
-	uart.println("set ip netmask 255.255.0.0"); delay(delayW);
+	uart.println("set ip netmask 255.255.0.0"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip dhcp 0"); uart.flush();
-	uart.println("set ip dhcp 0"); delay(delayW);
+	uart.println("set ip dhcp 0"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip proto 2"); uart.flush();
-	uart.println("set ip proto 2"); delay(delayW);
+	uart.println("set ip proto 2"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set wlan ssid WiFly-GSX-XX"); uart.flush();
-	uart.println("set wlan ssid WiFly-GSX-XX"); delay(delayW);
+	uart.println("set wlan ssid WiFly-GSX-XX"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set wlan channel 1"); uart.flush();
-	uart.println("set wlan channel 1"); delay(delayW);
+	uart.println("set wlan channel 1"); delay(DEFAULT_DELAY_TIME);
 
 	// Create adhoc network
 	Serial.println("set wlan join 4"); uart.flush();
-	uart.println("set wlan join 4"); delay(delayW);
+	uart.println("set wlan join 4"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("save"); uart.flush();
-	uart.println("save"); delay(delayW);
+	uart.println("save"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("reboot"); uart.flush();
-	uart.println("reboot"); delay(delayW);
-	delay(2000);
+	uart.println("reboot"); delay(DEFAULT_DELAY_TIME);
+	delay(DEFAULT_WAIT_TIME);
 	
 	inCommandMode=false;
 	
@@ -245,39 +242,40 @@ boolean WiFlyRNXV::AdHocEnded(){
 }
 
 void WiFlyRNXV::SetUDPMode(){
-	int delayW=500;
+	delay(DEFAULT_WAIT_TIME);
 	
-	delay(2000);
 	if(!inCommandMode)	EnterCommandMode();
-	Serial.println("Attempting cmd mode");
 	
-	delay(delayW);
+	Serial.println("Setting up UDP Mode..");	
+	delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip proto 1"); uart.flush();
-	uart.println("set ip proto 1"); delay(delayW);
-	Serial.println("set ip host 192.168.1.8"); uart.flush();
-	uart.println("set ip host 192.168.1.8"); delay(delayW);
+	uart.println("set ip proto 1"); delay(DEFAULT_DELAY_TIME);
+	Serial.println("set ip host 192.168.1.3"); uart.flush();
+	uart.println("set ip host 192.168.1.3"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip remote 2005"); uart.flush();
-	uart.println("set ip remote 2005"); delay(delayW);
+	uart.println("set ip remote 2005"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("set ip local 2000"); uart.flush();
-	uart.println("set ip local 2000"); delay(delayW);
+	uart.println("set ip local 2000"); delay(DEFAULT_DELAY_TIME);
 
 	Serial.println("save"); uart.flush();
-	uart.println("save"); delay(delayW);
+	uart.println("save"); delay(DEFAULT_DELAY_TIME);
 	Serial.println("reboot"); uart.flush();
-	uart.println("reboot"); delay(delayW);
-	delay(delayW);
+	uart.println("reboot"); delay(DEFAULT_DELAY_TIME);
+	
+	uart.flush();
 	
 	inCommandMode=false;
 	Serial.println("Done SetUDPMode");
-	uart.flush();
-	delay(2000);
+	delay(DEFAULT_WAIT_TIME);
 }
 
 void WiFlyRNXV::SendUDP(char* value){
 	Serial.println("sending udp string:");
 	Serial.println(value);
 	uart.flush();
+	delay(DEFAULT_DELAY_TIME);
 	uart.println(value);
+	delay(DEFAULT_DELAY_TIME);
 }
 
 int WiFlyRNXV::CheckUART()
@@ -348,7 +346,7 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 	Serial.println(buffer);
 	
 	// Check if sync command issued
-	if(checkForString(KEYWORD_SYNC,buffer))
+	if(checkForString(buffer,KEYWORD_SYNC))
 	{
 		Serial.println("Sending UDP sync request.");
 		SendUDP("<Prototype:pw9999:2:0000>");
@@ -364,26 +362,24 @@ int WiFlyRNXV::ProcessResponse(char* buffer)
 		if(buffer[0] == KEYWORD_FRONT_DELIMITER &&
 		   buffer[MAX_SWITCHES+1] == KEYWORD_END_DELIMITER)
 		{
+			Serial.println("Response matches switch update request.");
 			found_command = true;
 			for(i=0; i<MAX_SWITCHES; i++)
 			{
-				if(buffer[i+1] != '1' && buffer[i+1] != 0)
+				if(buffer[i+1] != '1' && buffer[i+1] != '0')
 					found_command = false;
 			}
 		}
 		if(found_command == true)
 		{
 			Serial.println("Found switch data!");
-			int j;
-			for(j=0; j++; j<MAX_SWITCHES)
+			for(i=0; i<MAX_SWITCHES; i++)
 			{
 				// Arrange flags
-				if (*(buffer+i+j+1) == '1')
-					switch_status += 1;
-				// If zero do nothing
-				// If not zero then don't adjust switch. nyi.
-				// else if (*(buffer+i+j+1) == '1')
-				switch_status << 1;
+				if (buffer[i+1] == '1')
+					switch_status += 1;				
+				// If not 1 or 0 then read in current port and don't adjust switch. nyi.
+				switch_status = switch_status << 1;
 			}
 			return switch_status;
 		}
